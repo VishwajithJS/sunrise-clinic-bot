@@ -1,5 +1,7 @@
 from google import genai
 from google.genai import types
+import time
+from google.genai import errors
 
 MODEL = "gemini-3.5-flash-lite"
 SYSTEM_PROMPT = """
@@ -35,14 +37,33 @@ config = types.GenerateContentConfig(
 )
 
 
+FALLBACK = "Sorry, I'm having trouble right now. Please try again, or call the clinic at +91 00000 00000."
+
+
 def get_reply(history, user_text):
-    history.append(types.Content(role="user", parts=[types.Part(text=user_text)]))
+    user_msg = types.Content(role="user", parts=[types.Part(text=user_text)])
+    contents = history + [user_msg]
 
-    response = client.models.generate_content(
-        model=MODEL,
-        contents=history,
-        config=config,
-    )
+    for attempt in range(3):
+        try:
+            response = client.models.generate_content(
+                model=MODEL,
+                contents=contents,
+                config=config,
+            )
+            break
+        except errors.ServerError:
+            if attempt == 2:
+                return FALLBACK
+            time.sleep(2 ** attempt)
+        except errors.ClientError:
+            return FALLBACK
+        except Exception:
+            return FALLBACK
 
+    if not response.text:
+        return FALLBACK
+
+    history.append(user_msg)
     history.append(types.Content(role="model", parts=[types.Part(text=response.text)]))
     return response.text
