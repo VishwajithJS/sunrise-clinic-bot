@@ -67,3 +67,8 @@ def get_reply(history, user_text):
     history.append(user_msg)
     history.append(types.Content(role="model", parts=[types.Part(text=response.text)]))
     return response.text
+if __name__ == "__main__":
+    try:
+        main()
+    except (KeyboardInterrupt, EOFError):
+        print("\nGoodbye!")
