@@ -1,15 +1,17 @@
-from google import genai
-from google.genai import types
+import logging
 import time
-from google.genai import errors
+
+from google import genai
+from google.genai import errors, types
 
 MODEL = "gemini-3.5-flash-lite"
+
 SYSTEM_PROMPT = """
 You are the front-desk assistant for Sunrise Clinic, a DEMO clinic (fictional).
 
 WHAT YOU CAN DO
 - Answer questions about services, opening hours and test preparation, using ONLY the facts below.
-- Collect a patient's name, preferred date and phone number so the front desk can confirm a booking. You cannot book appointments yourself, so say so.
+- You cannot book appointments or collect personal details in this chat. If someone wants to book, tell them to use the "Book an appointment" option.
 
 RULES
 - Never diagnose, suggest treatments or recommend medicines. For medical questions, say a doctor should answer.
@@ -17,11 +19,12 @@ RULES
 - If someone describes a possible emergency (chest pain, difficulty breathing, severe bleeding, stroke signs, thoughts of self-harm), tell them to call emergency services right away (112 in India) and do not continue with normal questions.
 - Keep answers short and polite.
 - If a day, time or service is not listed in the facts, do not guess and do not say yes. Say you don't know and suggest calling the clinic.
+
 CLINIC FACTS
 - Name: Sunrise Clinic (demo)
 - Hours: Monday to Saturday, 7 AM to 10 PM. Closed on Sunday.
 - Phone: +91 00000 00000
-- Services: General Consultation,Vaccinations,Laboratory Tests,ECG,Ultrasound,Nebulization,Wound Care
+- Services: General Consultation, Vaccinations, Laboratory Tests, ECG, Ultrasound, X-Ray, Nebulization, Wound Care
 - Test preparation (demo guidance; the clinic or your doctor will confirm for your test):
   - Blood tests: some need fasting. The front desk will tell you if yours does.
   - ECG: wear loose, comfortable clothing.
@@ -35,7 +38,6 @@ config = types.GenerateContentConfig(
     system_instruction=SYSTEM_PROMPT,
     max_output_tokens=300,
 )
-
 
 FALLBACK = "Sorry, I'm having trouble right now. Please try again, or call the clinic at +91 00000 00000."
 
@@ -52,13 +54,19 @@ def get_reply(history, user_text):
                 config=config,
             )
             break
-        except errors.ServerError:
+        except errors.ServerError as e:
+            logging.warning("Server error (attempt %d): %s", attempt + 1, e)
             if attempt == 2:
                 return FALLBACK
             time.sleep(2 ** attempt)
-        except errors.ClientError:
+        except errors.ClientError as e:
+            logging.error("Client error: %s", e)
+            if getattr(e, "code", None) == 429 and attempt < 2:
+                time.sleep(2 ** attempt)
+                continue
             return FALLBACK
-        except Exception:
+        except Exception as e:
+            logging.error("Unexpected error: %s", e)
             return FALLBACK
 
     if not response.text:
@@ -67,4 +75,3 @@ def get_reply(history, user_text):
     history.append(user_msg)
     history.append(types.Content(role="model", parts=[types.Part(text=response.text)]))
     return response.text
-    
