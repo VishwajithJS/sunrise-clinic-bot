@@ -13,10 +13,19 @@ EMERGENCY_TEXT = (
 EMERGENCY_WORDS = ("breath", "chest pain", "bleed", "unconscious", "stroke",
                    "heart attack", "seizure", "overdose", "suicid", "kill myself")
 
+BOOKING_PHRASES = ("i want to book", "book an appointment", "book appointment",
+                   "book me", "make an appointment", "schedule an appointment",
+                   "i need an appointment")
+
 
 def is_emergency(text):
     text = text.lower()
     return any(word in text for word in EMERGENCY_WORDS)
+
+
+def wants_to_book(text):
+    text = text.lower().strip()
+    return text == "book" or any(phrase in text for phrase in BOOKING_PHRASES)
 
 
 def check_name(text):

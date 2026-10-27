@@ -1,5 +1,5 @@
 from bot import get_reply
-from booking import book_appointment, EMERGENCY_TEXT, is_emergency
+from booking import book_appointment, EMERGENCY_TEXT, is_emergency, wants_to_book
 
 MENU = """
 === Sunrise Clinic (demo) ===
@@ -11,15 +11,21 @@ MENU = """
 
 
 def faq(history):
-    print("Ask about services, hours or test preparation. Type 'back' to return to the menu.")
+    print("Ask about services, hours or test preparation. Type 'back' or 'menu' to return to the main menu.")
     while True:
         text = input("You: ").strip()
-        if text.lower() == "back":
+        if text.lower() in ("back", "menu", "0"):
             return
         if not text:
             continue
         if is_emergency(text):
             print("Bot:", EMERGENCY_TEXT)
+            continue
+        if wants_to_book(text):
+            answer = input("Bot: I can open the booking form. Start booking now? (yes/no): ")
+            if answer.strip().lower() in ("yes", "y"):
+                book_appointment()
+                return
             continue
         print("Bot:", get_reply(history, text))
 
@@ -46,4 +52,4 @@ if __name__ == "__main__":
     try:
         main()
     except (KeyboardInterrupt, EOFError):
-        print("\n Goodbye!")
+        print("\nGoodbye!")
