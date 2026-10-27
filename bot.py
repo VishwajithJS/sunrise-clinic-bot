@@ -31,7 +31,8 @@ CLINIC FACTS
   - Ultrasound: preparation depends on the scan type. Please call the clinic to confirm.
   - X-ray: remove metal items such as jewellery before the scan.
 """
-
+FALLBACK = ("Sorry, I'm having trouble right now. Please try again, or call the clinic at "
+            "+91 00000 00000. If this is an emergency, call 112.")
 client = genai.Client()
 
 config = types.GenerateContentConfig(

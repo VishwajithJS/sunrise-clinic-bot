@@ -2,6 +2,7 @@ import csv
 import os
 import re
 from datetime import date, datetime, timedelta
+from difflib import SequenceMatcher
 
 BOOKINGS_FILE = "bookings.csv"
 
@@ -10,17 +11,35 @@ EMERGENCY_TEXT = (
     "Do not wait for the clinic."
 )
 
+# Matched as fragments anywhere in the text (catches "breath", "breathing", "bleeding"...)
 EMERGENCY_WORDS = ("breath", "chest pain", "bleed", "unconscious", "stroke",
                    "heart attack", "seizure", "overdose", "suicid", "kill myself")
+
+# Matched with typo tolerance (catches "chest pan", "hart attack"...)
+EMERGENCY_FUZZY = ("chest pain", "heart attack", "kill myself", "unconscious",
+                   "seizure", "overdose", "stroke")
 
 BOOKING_PHRASES = ("i want to book", "book an appointment", "book appointment",
                    "book me", "make an appointment", "schedule an appointment",
                    "i need an appointment")
 
 
+def fuzzy_match(text, phrases, cutoff=0.85):
+    words = re.findall(r"[a-z']+", text)
+    for phrase in phrases:
+        size = len(phrase.split())
+        for i in range(len(words) - size + 1):
+            chunk = " ".join(words[i:i + size])
+            if SequenceMatcher(None, chunk, phrase).ratio() >= cutoff:
+                return True
+    return False
+
+
 def is_emergency(text):
     text = text.lower()
-    return any(word in text for word in EMERGENCY_WORDS)
+    if any(word in text for word in EMERGENCY_WORDS):
+        return True
+    return fuzzy_match(text, EMERGENCY_FUZZY)
 
 
 def wants_to_book(text):
@@ -83,6 +102,7 @@ def save_booking(name, phone, chosen_date):
 
 def book_appointment():
     print("Booking (demo). Type 'cancel' at any time to stop.")
+    print("If this is an emergency, call 112 instead of booking.")
     name = ask("Your name: ", check_name)
     if name is None:
         print("Booking cancelled.")
