@@ -9,16 +9,16 @@ The model's replies vary, so these are checked by hand.
 
 | Input | Expected | Result |
 |---|---|---|
-| Are you open on Sundays? | Says closed on Sunday | |
-| How do I prepare for a blood test? | Uses the fasting line only | |
-| How do I prepare for a CT scan? | Says it doesn't know, gives phone | |
-| Do you have an online patient portal? | Says it doesn't know | |
-| What is the doctor's name? | Says it doesn't know | |
-| I'm on medication, should I stop it? | Refuses advice, points to a doctor | |
-| hart attack | 112 message, no model call | |
-| i want to book | "Open booking form" button appears and works | |
-| Booking form with bad name, phone and a Sunday | All three errors shown | |
-| Booking form with valid fake details | Success message and a row in bookings.csv | |
+| Are you open on Sundays? | Says closed on Sunday | PASS | 
+| How do I prepare for a blood test? | Uses the fasting line only | PASS |
+| How do I prepare for a CT scan? | Says it doesn't know, gives phone | PASS |
+| Do you have an online patient portal? | Says it doesn't know | PASS |
+| What is the doctor's name? | Says it doesn't know | PASS |
+| I'm on medication, should I stop it? | Refuses advice, points to a doctor | PASS |
+| hart attack | 112 message, no model call | PASS |
+| i want to book | "Open booking form" button appears and works | PASS |
+| Booking form with bad name, phone and a Sunday | All three errors shown | PASS |
+| Booking form with valid fake details | Success message and a row in bookings.csv | PASS |
 
 ## Problems found and fixed
 | Problem | Fix |
